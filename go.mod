@@ -1,0 +1,24 @@
+module spriteplayer
+
+go 1.26.0
+
+require (
+	github.com/hajimehoshi/ebiten/v2 v2.10.6
+	github.com/ncruces/zenity v0.10.15
+	golang.org/x/image v0.48.0
+)
+
+require (
+	github.com/akavel/rsrc v0.10.2 // indirect
+	github.com/dchest/jsmin v1.0.0 // indirect
+	github.com/ebitengine/gomobile v0.0.0-20260820040257-d11f821a26a6 // indirect
+	github.com/ebitengine/hideconsole v1.0.0 // indirect
+	github.com/ebitengine/purego v0.11.3 // indirect
+	github.com/go-text/typesetting v0.3.5 // indirect
+	github.com/josephspurrier/goversioninfo v1.7.0 // indirect
+	github.com/randall77/makefat v0.0.0-20260406194835-1b91746796b7 // indirect
+	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef // indirect
+	golang.org/x/sync v0.25.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
+)
