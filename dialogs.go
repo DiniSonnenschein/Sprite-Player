@@ -68,7 +68,7 @@ func (g *Game) dialogNewProject() {
 		}
 
 		opts := []zenity.Option{zenity.Directory(),
-			zenity.Title("Neues Projekt (3/3) – Wo soll der Ordner „" + folder + "“ angelegt werden?")}
+			zenity.Title("Neues Projekt (3/3) – Ordner wählen, in dem „" + folder + "“ angelegt wird, oder den Ordner mit deinen PNGs")}
 		if parentDefault != "" {
 			opts = append(opts, zenity.Filename(parentDefault+string(os.PathSeparator)))
 		}
@@ -77,7 +77,27 @@ func (g *Game) dialogNewProject() {
 			return nil
 		}
 		dir := filepath.Join(parent, folder)
-		if st, err := os.Stat(dir); err == nil {
+		useExisting := false
+
+		// If the chosen folder already holds the PNGs, it probably is meant to
+		// be the project folder itself.
+		if pngs, _ := listPNGs(parent); len(pngs) > 0 {
+			err := zenity.Question(
+				fmt.Sprintf("Im gewählten Ordner „%s“ liegen bereits %d PNG-Datei(en).\n\nSoll dieser Ordner selbst der Projektordner werden?\nSonst wird darin ein neuer, leerer Unterordner „%s“ angelegt.",
+					filepath.Base(parent), len(pngs), folder),
+				zenity.Title("Neues Projekt"), zenity.QuestionIcon,
+				zenity.OKLabel("Diesen Ordner verwenden"), zenity.CancelLabel("Unterordner anlegen"))
+			if err == nil {
+				dir = parent
+				parent = filepath.Dir(parent)
+				useExisting = true
+			} else if err != zenity.ErrCanceled {
+				return nil
+			}
+		}
+		if st, err := os.Stat(dir); useExisting {
+			// folder with PNGs chosen above – use it as it is
+		} else if err == nil {
 			if !st.IsDir() {
 				showError("Neues Projekt", "Es gibt bereits eine Datei mit dem Namen „"+folder+"“.")
 				return nil
@@ -103,19 +123,32 @@ func (g *Game) dialogNewProject() {
 	})
 }
 
+// dialogOpenFolder opens a project. The Windows folder picker does not show
+// any files, so the user picks any image (or the project file) inside the
+// project folder instead and the whole folder is opened.
 func (g *Game) dialogOpenFolder() {
 	start := g.dir
 	if start == "" {
 		start = g.settings.LastParentDir
 	}
 	g.runDialog(func() func() {
-		opts := []zenity.Option{zenity.Directory(), zenity.Title("Projektordner öffnen")}
+		opts := []zenity.Option{
+			zenity.Title("Projekt öffnen – wähle ein beliebiges Bild im Projektordner"),
+			zenity.FileFilters{
+				{Name: "PNG-Bilder und Projektdatei", Patterns: []string{"*.png", projectFileName}, CaseFold: true},
+				{Name: "Alle Dateien", Patterns: []string{"*"}},
+			},
+		}
 		if start != "" {
 			opts = append(opts, zenity.Filename(start+string(os.PathSeparator)))
 		}
-		dir, err := zenity.SelectFile(opts...)
+		file, err := zenity.SelectFile(opts...)
 		if err != nil {
 			return nil
+		}
+		dir := file
+		if st, err := os.Stat(file); err == nil && !st.IsDir() {
+			dir = filepath.Dir(file)
 		}
 		return func() {
 			g.openProject(dir, nil)
@@ -301,4 +334,54 @@ func openInExplorer(dir string) {
 		cmd = exec.Command("xdg-open", dir)
 	}
 	_ = cmd.Start()
+}
+
+// dialogDeleteFrame removes the current frame from the project. In a project
+// folder the file is moved to the recycle bin; for individually opened files
+// the frame is only removed from the list.
+func (g *Game) dialogDeleteFrame() {
+	if len(g.frames) == 0 {
+		return
+	}
+	g.playing = false
+	fr := g.frames[g.cur]
+	inFolder := g.files == nil
+	g.runDialog(func() func() {
+		msg := fmt.Sprintf("„%s“ aus dem Projekt löschen?\n\nDie Datei wird in den Papierkorb verschoben und kann von dort wiederhergestellt werden.", fr.Name)
+		if !inFolder {
+			msg = fmt.Sprintf("„%s“ aus der Abfolge entfernen?\n\nDie Datei selbst bleibt erhalten.", fr.Name)
+		}
+		if zenity.Question(msg, zenity.Title("Frame löschen"), zenity.WarningIcon,
+			zenity.OKLabel("Löschen"), zenity.CancelLabel("Abbrechen")) != nil {
+			return nil
+		}
+		var err error
+		if inFolder {
+			err = moveToTrash(fr.Path)
+		}
+		return func() {
+			if err != nil {
+				g.setStatus("Konnte nicht gelöscht werden: "+err.Error(), true)
+				return
+			}
+			if !inFolder {
+				var rest []string
+				for _, f := range g.files {
+					if f != fr.Path {
+						rest = append(rest, f)
+					}
+				}
+				g.files = rest
+				if len(rest) == 0 {
+					g.files = []string{}
+				}
+			}
+			g.reload(true)
+			if inFolder {
+				g.setStatus("„"+fr.Name+"“ in den Papierkorb verschoben", false)
+			} else {
+				g.setStatus("„"+fr.Name+"“ aus der Abfolge entfernt", false)
+			}
+		}
+	})
 }

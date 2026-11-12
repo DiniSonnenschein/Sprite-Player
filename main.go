@@ -582,6 +582,8 @@ func (g *Game) handleKeys() {
 		if g.dir != "" || g.files != nil {
 			g.reload(false)
 		}
+	case jp(ebiten.KeyDelete):
+		g.dialogDeleteFrame()
 	}
 }
 
@@ -719,6 +721,8 @@ func (g *Game) onClick(id string) {
 		g.dialogOpenFolder()
 	case "openfiles":
 		g.dialogOpenFiles()
+	case "delete":
+		g.dialogDeleteFrame()
 	case "explorer":
 		openInExplorer(g.dir)
 	case "title":
@@ -797,7 +801,7 @@ func (g *Game) buildUI() []Widget {
 	}
 
 	add(button("new", "Neues Projekt …", "Projektordner mit Titel und Leinwand-Größe anlegen (Strg+N)", 0))
-	add(button("open", "Ordner öffnen …", "Projektordner öffnen (Strg+O) – oder Ordner/PNGs ins Fenster ziehen", 0))
+	add(button("open", "Projekt öffnen …", "Ein Bild im Projektordner wählen – der ganze Ordner wird geöffnet (Strg+O)", 0))
 	add(button("openfiles", "PNGs öffnen …", "Einzelne PNG-Dateien auswählen", 0))
 	eb := button("explorer", "Im Explorer zeigen", "Projektordner im Explorer öffnen", 0)
 	eb.Disabled = g.dir == ""
@@ -847,6 +851,15 @@ func (g *Game) buildUI() []Widget {
 		fl = fmt.Sprintf("Frame %d / %d", g.cur+1, len(g.frames))
 	}
 	add(label(fl, textWidth("Frame 0000 / 0000", f.face), colText))
+	name := ""
+	if len(g.frames) > 0 {
+		name = g.frames[g.cur].Name
+	}
+	add(label(name, g.px(170), colDim))
+	del := button("delete", "Frame löschen …", "Aktuellen Frame aus dem Projekt löschen – die Datei kommt in den Papierkorb (Entf)", 0)
+	del.Disabled = len(g.frames) == 0
+	add(del)
+	x += g.px(6)
 	sl := Widget{ID: "slider", Kind: KindSlider, Rect: image.Rect(x, y, g.sw-pad, y+bh)}
 	if len(g.frames) == 0 {
 		sl.Disabled = true
@@ -984,7 +997,7 @@ func (g *Game) drawEmptyHint(screen *ebiten.Image, area image.Rectangle) {
 	if g.title == "" {
 		lines = []string{
 			"PNGs oder einen Ordner hierher ziehen",
-			"oder oben „Neues Projekt …“ bzw. „Ordner öffnen …“ wählen.",
+			"oder oben „Neues Projekt …“ bzw. „Projekt öffnen …“ wählen.",
 		}
 	} else {
 		lines = []string{
@@ -1046,7 +1059,7 @@ func (g *Game) drawBars(screen *ebiten.Image, f *uiFonts) {
 			if clr == nil {
 				clr = colText
 			}
-			drawTextIn(screen, w.Label, f.face, w.Rect, w.Center, clr)
+			drawTextIn(screen, ellipsize(w.Label, f.face, w.Rect.Dx()), f.face, w.Rect, w.Center, clr)
 		case KindButton:
 			g.drawButton(screen, f, w, hover)
 		case KindSlider:
@@ -1090,16 +1103,8 @@ func (g *Game) drawButton(screen *ebiten.Image, f *uiFonts, w *Widget, hover boo
 	if !w.Center {
 		r.Min.X += g.px(10)
 	}
-	lbl := w.Label
 	// Shorten text that does not fit (e.g. long titles).
-	maxW := r.Dx() - g.px(10)
-	if textWidth(lbl, f.face) > maxW {
-		rs := []rune(lbl)
-		for len(rs) > 1 && textWidth(string(rs)+"…", f.face) > maxW {
-			rs = rs[:len(rs)-1]
-		}
-		lbl = string(rs) + "…"
-	}
+	lbl := ellipsize(w.Label, f.face, r.Dx()-g.px(10))
 	face := f.face
 	drawTextIn(screen, lbl, face, r, w.Center, clr)
 }

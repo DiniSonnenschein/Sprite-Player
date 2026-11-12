@@ -26,6 +26,7 @@ type projectFile struct {
 
 // Frame is one loaded PNG.
 type Frame struct {
+	Path string
 	Name string
 	Img  *ebiten.Image
 	W, H int
@@ -138,6 +139,7 @@ func loadFrames(paths []string) (frames []Frame, errs []string) {
 		}
 		b := img.Bounds()
 		frames = append(frames, Frame{
+			Path: p,
 			Name: filepath.Base(p),
 			Img:  ebiten.NewImageFromImage(img),
 			W:    b.Dx(),

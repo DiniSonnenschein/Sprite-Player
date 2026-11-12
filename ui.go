@@ -191,3 +191,15 @@ func drawIcon(dst *ebiten.Image, icon Icon, r image.Rectangle, scale float64, cl
 		rect(cx+w-bar+1*s, cy-h, bar, 2*h)
 	}
 }
+
+// ellipsize shortens s with "…" so that it fits into maxW pixels.
+func ellipsize(s string, face text.Face, maxW int) string {
+	if textWidth(s, face) <= maxW {
+		return s
+	}
+	rs := []rune(s)
+	for len(rs) > 1 && textWidth(string(rs)+"…", face) > maxW {
+		rs = rs[:len(rs)-1]
+	}
+	return string(rs) + "…"
+}

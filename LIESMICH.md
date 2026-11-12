@@ -14,8 +14,13 @@ Dann auf **Weitere Informationen** und danach auf **Trotzdem ausführen** klicke
   Dort wird ein Ordner mit dem Titel angelegt. Darin speichert die Datei `sprite-projekt.json` Titel und Leinwand-Größe.
 - Lege deine PNGs in diesen Ordner oder ziehe sie ins Fenster.
   Kommen die PNGs aus einem anderen Ordner, fragt das Programm, ob sie ins Projekt kopiert werden sollen.
-- **Ordner öffnen …** oder einen Ordner ins Fenster ziehen öffnet ein Projekt.
+- Wählst du bei „Neues Projekt“ als Speicherort einen Ordner, in dem schon PNGs liegen,
+  fragt das Programm, ob dieser Ordner selbst der Projektordner werden soll.
+- **Projekt öffnen …**: Wähle ein beliebiges Bild (oder die `sprite-projekt.json`) im Projektordner.
+  Dann wird der ganze Ordner geöffnet. Einen Ordner ins Fenster zu ziehen funktioniert ebenfalls.
   Ordner ohne Projektdatei funktionieren auch. Die Leinwand hat dann die Größe des ersten Bildes.
+- **Frame löschen …** (oder Taste Entf) verschiebt das gerade angezeigte Bild in den Papierkorb.
+  Von dort lässt es sich wiederherstellen.
 - Titel und Leinwand-Größe ändern: oben in der Leiste auf den Titel bzw. auf „Leinwand …“ klicken.
 - Neue oder geänderte PNGs im Ordner werden nach etwa 1 Sekunde automatisch neu geladen.
 - Beim nächsten Start wird das zuletzt geöffnete Projekt wieder geöffnet.
@@ -42,7 +47,8 @@ Dann auf **Weitere Informationen** und danach auf **Trotzdem ausführen** klicke
 | Bild verschieben              | Ziehen mit linker Maustaste |                   |
 | Vollbild                      | „Vollbild“                 | F oder F11, Esc    |
 | Neu laden                     |                            | F5                 |
-| Neues Projekt / Ordner öffnen |                            | Strg+N / Strg+O    |
+| Aktuellen Frame löschen       | „Frame löschen …“          | Entf               |
+| Neues Projekt / Projekt öffnen |                            | Strg+N / Strg+O    |
 
 Im Vollbild blenden sich die Leisten aus und erscheinen wieder, sobald die Maus bewegt wird.
 
